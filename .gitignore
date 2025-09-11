@@ -1,0 +1,6 @@
+/out
+*.zip
+/src/main/java/com/udacity/hotel/*.class
+/src/main/java/com/udacity/hotel/*/*.class
+/doc
+/target
