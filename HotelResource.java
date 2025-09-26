@@ -37,14 +37,20 @@ public final class HotelResource {
         return reservationService.getARoom(roomNumber);
     }
 
-   
-    public Reservation bookARoom(String customerEmail, IRoom room, Date checkInDate,
-                                 Date checkOutDate) {
+    public Reservation bookARoom(String customerEmail, IRoom room, Date checkInDate, Date checkOutDate) {
+    Customer customer = getCustomer(customerEmail);
+    return reservationService.reserveARoom(customer, room, checkInDate, checkOutDate);
+}
 
-        Customer customer = getCustomer(customerEmail);
-        return reservationService.reserveARoom(customer, room, checkInDate,
-                checkOutDate);
-    }
+
+   
+    // public Reservation bookARoom(String customerEmail, IRoom room, Date checkInDate,
+    //                              Date checkOutDate) {
+
+    //     Customer customer = getCustomer(customerEmail);
+    //     return reservationService.reserveARoom(customer, room, checkInDate,
+    //             checkOutDate);
+    // }
 
 
     public Collection<Reservation> getCustomersReservations(String customerEmail) {
