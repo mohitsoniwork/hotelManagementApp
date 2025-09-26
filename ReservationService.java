@@ -54,48 +54,78 @@ public final class ReservationService {
             throw new IllegalArgumentException("There is no room with number " +
                     roomId);
         }
-    }
+    }    
 
-    public Reservation reserveARoom(Customer customer, IRoom room, Date checkInDate,
-                                    Date checkOutDate) {
-        Reservation newReservation = reservationFactory.create(customer, room, checkInDate,
-                checkOutDate);
-        if (reservations.contains(newReservation)) {
-            throw new IllegalArgumentException("This room is already reserved for these " +
-                    "days");
-        }
-        reservations.add(newReservation);
-        return newReservation;
-    }
+    // Helper function for overlap checking
+private static boolean overlaps(Date in1, Date out1, Date in2, Date out2) {
+    return in1.before(out2) && in2.before(out1);
+}
 
-   
-    public Collection<IRoom> findRooms(Date checkInDate, Date checkOutDate) {
-        // Copy all rooms
-        Map<String, IRoom> availableRooms = new HashMap<>(this.rooms);
-
-        // Compare with dates of existing reservations
-        for (Reservation aReservation: this.reservations) {
-            DatesCheckResult checkResult = checkDates(aReservation, checkInDate,
-                    checkOutDate);
-            boolean isCheckInOK = checkResult.isCheckInOK();
-            boolean isCheckOutOK = checkResult.isCheckOutOK();
-            if (! isCheckInOK || ! isCheckOutOK) {
-                // Remove the room from the list of available rooms
-                availableRooms.remove(aReservation.getRoom().getRoomNumber());
+public Reservation reserveARoom(Customer customer, IRoom room, Date checkInDate, Date checkOutDate) {
+    // Correct overlap detection: block only true overlaps for this room
+    for (Reservation existing : reservations) {
+        if (existing.getRoom().equals(room)) {
+            if (overlaps(checkInDate, checkOutDate, existing.getCheckInDate(), existing.getCheckOutDate())) {
+                throw new IllegalArgumentException("This room is already reserved for these days");
             }
         }
-
-        return new ArrayList<>(availableRooms.values());
     }
+    Reservation newReservation = reservationFactory.create(customer, room, checkInDate, checkOutDate);
+    reservations.add(newReservation);
+    return newReservation;
+}
+
+public Collection<IRoom> findRooms(Date checkInDate, Date checkOutDate) {
+    Map<String, IRoom> availableRooms = new HashMap<>(this.rooms);
+    for (Reservation aReservation : this.reservations) {
+        if (overlaps(checkInDate, checkOutDate, aReservation.getCheckInDate(), aReservation.getCheckOutDate())) {
+            availableRooms.remove(aReservation.getRoom().getRoomNumber());
+        }
+    }
+    return new ArrayList<>(availableRooms.values());
+}
+
+
+    // public Reservation reserveARoom(Customer customer, IRoom room, Date checkInDate,
+    //                                 Date checkOutDate) {
+    //     Reservation newReservation = reservationFactory.create(customer, room, checkInDate,
+    //             checkOutDate);
+    //     if (reservations.contains(newReservation)) {
+    //         throw new IllegalArgumentException("This room is already reserved for these " +
+    //                 "days");
+    //     }
+    //     reservations.add(newReservation);
+    //     return newReservation;
+    // }
+
+   
+    // public Collection<IRoom> findRooms(Date checkInDate, Date checkOutDate) {
+    //     // Copy all rooms
+    //     Map<String, IRoom> availableRooms = new HashMap<>(this.rooms);
+
+    //     // Compare with dates of existing reservations
+    //     for (Reservation aReservation: this.reservations) {
+    //         DatesCheckResult checkResult = checkDates(aReservation, checkInDate,
+    //                 checkOutDate);
+    //         boolean isCheckInOK = checkResult.isCheckInOK();
+    //         boolean isCheckOutOK = checkResult.isCheckOutOK();
+    //         if (! isCheckInOK || ! isCheckOutOK) {
+    //             // Remove the room from the list of available rooms
+    //             availableRooms.remove(aReservation.getRoom().getRoomNumber());
+    //         }
+    //     }
+
+    //     return new ArrayList<>(availableRooms.values());
+    // }
 
  
-    DatesCheckResult checkDates(Reservation reservation, Date checkIn, Date checkOut) {
-        boolean isCheckInOK = checkIn.before(reservation.getCheckInDate()) ||
-                checkIn.compareTo(reservation.getCheckOutDate()) >= 0;
-        boolean isCheckOutOK = checkOut.compareTo(reservation.getCheckInDate()) <= 0 ||
-                checkOut.after(reservation.getCheckOutDate());
-        return new DatesCheckResult(isCheckInOK, isCheckOutOK);
-    }
+    // DatesCheckResult checkDates(Reservation reservation, Date checkIn, Date checkOut) {
+    //     boolean isCheckInOK = checkIn.before(reservation.getCheckInDate()) ||
+    //             checkIn.compareTo(reservation.getCheckOutDate()) >= 0;
+    //     boolean isCheckOutOK = checkOut.compareTo(reservation.getCheckInDate()) <= 0 ||
+    //             checkOut.after(reservation.getCheckOutDate());
+    //     return new DatesCheckResult(isCheckInOK, isCheckOutOK);
+    // }
 
    
     public Collection<Reservation> getCustomersReservation(Customer customer) {
