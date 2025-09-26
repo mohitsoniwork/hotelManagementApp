@@ -273,34 +273,55 @@ public class MainMenuService extends MenuService {
     }
 
     private Collection<IRoom> findAvailableRooms(Date checkIn, Date checkOut) {
-        Collection<IRoom> availableRooms = hotelResource.findARoom(checkIn,
-                checkOut);
-
+    Collection<IRoom> availableRooms = hotelResource.findARoom(checkIn, checkOut);
+    if (availableRooms.isEmpty()) {
+        consolePrinter.print("No rooms found for selected dates. Trying to find a room in the next 7 days");
+        // Shift dates by +7 days
+        checkIn = shiftDate(checkIn);
+        checkOut = shiftDate(checkOut);
+        availableRooms = hotelResource.findARoom(checkIn, checkOut);
         if (availableRooms.isEmpty()) {
-            consolePrinter.print("No rooms found for selected dates. Trying to find" +
-                    " a room in the next 7 days");
-
-            // Shift dates
-            checkIn = shiftDate(checkIn);
-            checkOut = shiftDate(checkOut);
-
-            // Find rooms available for shifted dates
-            availableRooms = hotelResource.findARoom(checkIn, checkOut);
-
-            if (availableRooms.isEmpty()) {
-                consolePrinter.print("No free rooms in the next 7 days found. Try " +
-                        "different dates");
-            } else {
-                // Print shifted dates and available rooms
-                consolePrinter.print("You can book following rooms from " + checkIn +
-                        " till " + checkOut + ":");
-                for (IRoom aRoom: availableRooms) {
-                    consolePrinter.print(aRoom);
-                }
+            consolePrinter.print("No free rooms in the next 7 days found. Try different dates");
+        } else {
+            consolePrinter.print("You can book following rooms from " + checkIn + " till " + checkOut + ":");
+            for (IRoom aRoom : availableRooms) {
+                consolePrinter.print(aRoom);
             }
         }
-        return availableRooms;
     }
+    return availableRooms;
+}
+
+
+    // private Collection<IRoom> findAvailableRooms(Date checkIn, Date checkOut) {
+    //     Collection<IRoom> availableRooms = hotelResource.findARoom(checkIn,
+    //             checkOut);
+
+    //     if (availableRooms.isEmpty()) {
+    //         consolePrinter.print("No rooms found for selected dates. Trying to find" +
+    //                 " a room in the next 7 days");
+
+    //         // Shift dates
+    //         checkIn = shiftDate(checkIn);
+    //         checkOut = shiftDate(checkOut);
+
+    //         // Find rooms available for shifted dates
+    //         availableRooms = hotelResource.findARoom(checkIn, checkOut);
+
+    //         if (availableRooms.isEmpty()) {
+    //             consolePrinter.print("No free rooms in the next 7 days found. Try " +
+    //                     "different dates");
+    //         } else {
+    //             // Print shifted dates and available rooms
+    //             consolePrinter.print("You can book following rooms from " + checkIn +
+    //                     " till " + checkOut + ":");
+    //             for (IRoom aRoom: availableRooms) {
+    //                 consolePrinter.print(aRoom);
+    //             }
+    //         }
+    //     }
+    //     return availableRooms;
+    // }
 
     private Date shiftDate(Date date) {
         Calendar cal = Calendar.getInstance();
